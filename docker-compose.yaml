@@ -1,0 +1,47 @@
+version: '3.7'
+services:
+
+    frontend:
+      build:
+        context: ./app-frontend 
+      ports:
+        - "80:80"
+      networks:
+        - app-network
+
+    backend:
+      build:
+        context: ./app-backend
+      ports:
+        - "8080:80"
+        - "443:443"
+      volumes:
+        - ./app-backend:/var/www/html
+      working_dir: /var/www/html
+      links:
+        - appdb
+      depends_on:
+        - appdb
+      networks:
+        - app-network
+        - db
+
+    appdb:
+      image: mysql:5.7
+      restart: unless-stopped
+      environment:
+        MYSQL_DATABASE: revisor
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_PASSWORD: revisor
+        MYSQL_USER: revisor
+      volumes:
+        - ./initdb:/docker-entrypoint-initdb.d
+      ports:
+        - 3307:3306
+      networks:
+        - db
+
+networks:
+  app-network:
+    driver: bridge
+  db:
